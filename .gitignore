@@ -29,6 +29,7 @@ scpi-99.pdf
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+.idea/**/Project.xml
 
 # Gradle
 .idea/**/gradle.xml
