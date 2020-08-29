@@ -5,6 +5,7 @@ use core::slice::Iter;
 use core::str;
 
 use core::convert::TryFrom;
+use libm::{round, roundf};
 
 use crate::expression::{channel_list, numeric_list};
 use crate::{util, NumericValues};
@@ -467,7 +468,7 @@ impl_tryfrom_float!(f64);
 
 // TODO: Shitty way of rounding integers
 macro_rules! impl_tryfrom_integer {
-    ($from:ty, $intermediate:ty) => {
+    ($from:ty, f64) => {
         impl<'a> TryFrom<Token<'a>> for $from {
             type Error = Error;
 
@@ -478,10 +479,72 @@ macro_rules! impl_tryfrom_integer {
                     Token::DecimalNumericProgramData(value) => lexical_core::parse::<$from>(value)
                         .or_else(|e| {
                             if matches!(e.code, lexical_core::ErrorCode::InvalidDigit) {
-                                let f = lexical_core::parse::<$intermediate>(value)?.round();
-                                if f > (<$from>::MAX as $intermediate) {
+                                // <f64 instance>.round() in core::intrinsics is not understood by rust-lld
+                                let f = round(lexical_core::parse::<f64>(value)?);
+                                if f > (<$from>::MAX as f64) {
                                     Err(lexical_core::ErrorCode::Overflow.into())
-                                } else if f < (<$from>::MIN as $intermediate) {
+                                } else if f < (<$from>::MIN as f64) {
+                                    Err(lexical_core::ErrorCode::Underflow.into())
+                                } else {
+                                    Ok(f as $from)
+                                }
+                            } else {
+                                Err(e)
+                            }
+                        })
+                        .map_err(|e| match e.code {
+                            lexical_core::ErrorCode::InvalidDigit => {
+                                ErrorCode::InvalidCharacterInNumber.into()
+                            }
+                            lexical_core::ErrorCode::Overflow
+                            | lexical_core::ErrorCode::Underflow => {
+                                ErrorCode::DataOutOfRange.into()
+                            }
+                            _ => ErrorCode::NumericDataError.into(),
+                        }),
+                    Token::NonDecimalNumericProgramData(value) => {
+                        <$from>::try_from(value).map_err(|_| ErrorCode::DataOutOfRange.into())
+                    }
+                    Token::CharacterProgramData(s) => match s {
+                        //Check for special float values
+                        ref x if Token::mnemonic_compare(b"MAXimum", x) => Ok(<$from>::MAX),
+                        ref x if Token::mnemonic_compare(b"MINimum", x) => Ok(<$from>::MIN),
+                        _ => Err(ErrorCode::DataTypeError.into()),
+                    },
+                    Token::DecimalNumericSuffixProgramData(_, _) => {
+                        Err(ErrorCode::SuffixNotAllowed.into())
+                    }
+                    t => {
+                        if t.is_data() {
+                            Err(ErrorCode::DataTypeError.into())
+                        } else {
+                            Err(Error::extended(
+                                ErrorCode::DeviceSpecificError,
+                                b"Parser error",
+                            ))
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    ($from:ty, f32) => {
+        impl<'a> TryFrom<Token<'a>> for $from {
+            type Error = Error;
+
+            fn try_from(value: Token) -> Result<Self, Self::Error> {
+                #[allow(unused_imports)]
+                use crate::lexical_core::Float;
+                match value {
+                    Token::DecimalNumericProgramData(value) => lexical_core::parse::<$from>(value)
+                        .or_else(|e| {
+                            if matches!(e.code, lexical_core::ErrorCode::InvalidDigit) {
+                                // <f32 instance>.round() in core::intrinsics is not understood by rust-lld
+                                let f = roundf(lexical_core::parse::<f32>(value)?);
+                                if f > (<$from>::MAX as f32) {
+                                    Err(lexical_core::ErrorCode::Overflow.into())
+                                } else if f < (<$from>::MIN as f32) {
                                     Err(lexical_core::ErrorCode::Underflow.into())
                                 } else {
                                     Ok(f as $from)
