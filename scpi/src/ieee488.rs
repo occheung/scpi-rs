@@ -39,10 +39,10 @@ pub mod commands {
     ///> TERMINATOR> clears the Output Queue, see 6.3.2.3.
     pub struct ClsCommand;
 
-    impl Command for ClsCommand {
+    impl<T: Device> Command<T> for ClsCommand {
         nquery!();
 
-        fn event(&self, context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+        fn event(&self, context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             // Clear SESR
             context.esr = 0;
             // Clear operation register
@@ -65,8 +65,8 @@ pub mod commands {
     ///> Event Status Enable Register. See 11.5.1.3.
     pub struct EseCommand;
 
-    impl Command for EseCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for EseCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             if let Some(ese) = args.next_data(true)? {
                 //Try_into will automatically check min/max for ese datatype (u8)
                 context.ese = ese.try_into()?;
@@ -76,7 +76,7 @@ pub mod commands {
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -89,12 +89,12 @@ pub mod commands {
     ///> Event Status Register. Reading the Standard Event Status Register clears it. See 11.5.1.2.
     pub struct EsrCommand;
 
-    impl Command for EsrCommand {
+    impl<T: Device> Command<T> for EsrCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -123,12 +123,12 @@ pub mod commands {
         pub firmware: &'a [u8],
     }
 
-    impl<'a> Command for IdnCommand<'a> {
+    impl<'a, T: Device> Command<T> for IdnCommand<'a> {
         qonly!();
 
         fn query(
             &self,
-            _context: &mut Context,
+            _context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -150,15 +150,15 @@ pub mod commands {
     ///> selected device operations have been finished. See 12.5.3 for details of operation.
     ///
     pub struct OpcCommand;
-    impl Command for OpcCommand {
-        fn event(&self, context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for OpcCommand {
+        fn event(&self, context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             context.push_error(ErrorCode::OperationComplete.into());
             Ok(())
         }
 
         fn query(
             &self,
-            _context: &mut Context,
+            _context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -194,10 +194,10 @@ pub mod commands {
     ///>  * The memory register(s) associated with *SAV.
     ///> The scope of the *LRN? response and *RCL (if implemented) is the same as *RST. See 10.17.3 and 10.29.3.
     pub struct RstCommand;
-    impl Command for RstCommand {
+    impl<T: Device> Command<T> for RstCommand {
         nquery!();
 
-        fn event(&self, context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+        fn event(&self, context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             context.device.rst()
         }
     }
@@ -208,8 +208,8 @@ pub mod commands {
     ///> The Service Request Enable query allows the programmer to determine the current contents of the Service Request
     ///> Enable Register, see 11.3.2.
     pub struct SreCommand;
-    impl Command for SreCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for SreCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             if let Some(sre) = args.next_data(true)? {
                 context.sre = sre.try_into()?;
             }
@@ -218,7 +218,7 @@ pub mod commands {
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -229,12 +229,12 @@ pub mod commands {
     ///## 10.36 *STB?, Read Status Byte Query
     ///> The Read Status Byte query allows the programmer to read the status byte and Master Summary Status bit.
     pub struct StbCommand;
-    impl Command for StbCommand {
+    impl<T: Device> Command<T> for StbCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -258,12 +258,12 @@ pub mod commands {
     ///> fixed, known values that are stated in the device documentation; or set to values deÞned by the user and stored in local
     ///> memory.
     pub struct TstCommand;
-    impl Command for TstCommand {
+    impl<T: Device> Command<T> for TstCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -285,9 +285,9 @@ pub mod commands {
     ///>
     ///> NOTE - In a device that implements only sequential commands, the no-operation-pending flag is always TRUE
     pub struct WaiCommand;
-    impl Command for WaiCommand {
+    impl<T: Device> Command<T> for WaiCommand {
         nquery!();
-        fn event(&self, _context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+        fn event(&self, _context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             Ok(())
         }
     }

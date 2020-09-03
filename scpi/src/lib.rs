@@ -128,12 +128,12 @@ pub mod info {
     /// Example `"0.3.0","rustc 1.47.0-nightly (6c8927b0c 2020-07-26)","85b43cf","85b43cfa0319e85cff726e2716beca50859a4ef4",DIRTY`
     pub struct LibVersionCommand {}
 
-    impl Command for LibVersionCommand {
+    impl<T: Device> Command<T> for LibVersionCommand {
         qonly!();
 
         fn query(
             &self,
-            _context: &mut Context,
+            _context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -278,11 +278,11 @@ pub trait Device {
 ///
 /// Contains registers related to the context and reference to the writer to respond with.
 /// Also contains a reference to the Device (may be shared by multiple contexts (**Note! If threadsafe**)).
-pub struct Context<'a> {
+pub struct Context<'a, T> {
     /// SCPI command tree root
-    root: &'a Node<'a>,
+    root: &'a Node<'a, T>,
     /// Device executed upon
-    pub device: &'a mut dyn Device,
+    pub device: &'a mut T,
     /// Error queue
     pub errors: &'a mut dyn ErrorQueue,
     /// Event Status Register
@@ -298,7 +298,7 @@ pub struct Context<'a> {
     pub questionable: EventRegister,
 }
 
-impl<'a> Context<'a> {
+impl<'a, T: Device> Context<'a, T> {
     /// Create a new context
     ///
     /// # Arguments
@@ -306,9 +306,9 @@ impl<'a> Context<'a> {
     ///  * `writer` - Writer used to write back response messages
     ///  * `root` - SCPI command tree to use
     pub fn new(
-        device: &'a mut dyn Device,
+        device: &'a mut T,
         errorqueue: &'a mut dyn ErrorQueue,
-        root: &'a Node<'a>,
+        root: &'a Node<'a, T>,
     ) -> Self {
         Context {
             device,
@@ -379,7 +379,7 @@ impl<'a> Context<'a> {
         let mut is_common = false;
 
         let mut branch = self.root; //Node parent
-        let mut node: Option<&Node> = None; //Current active node
+        let mut node: Option<&Node<T>> = None; //Current active node
 
         //Start response message
         response.message_start()?;

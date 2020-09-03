@@ -6,6 +6,7 @@ use crate::error::Result;
 use crate::response::ResponseUnit;
 use crate::tokenizer::Tokenizer;
 use crate::Context;
+use crate::Device;
 
 /// This trait implements a command with optional event/query operations.
 ///
@@ -45,7 +46,7 @@ use crate::Context;
 ///
 /// ```
 ///
-pub trait Command {
+pub trait Command<T> where T: Device {
     fn help(&self, _response: &mut ResponseUnit) {}
 
     fn meta(&self) -> CommandTypeMeta {
@@ -53,12 +54,12 @@ pub trait Command {
     }
 
     /// Called when the event form is used
-    fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()>;
+    fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()>;
 
     ///Called when the query form is used
     fn query(
         &self,
-        context: &mut Context,
+        context: &mut Context<T>,
         args: &mut Tokenizer,
         response: &mut ResponseUnit,
     ) -> Result<()>;
@@ -81,7 +82,7 @@ macro_rules! qonly {
             CommandTypeMeta::QueryOnly
         }
 
-        fn event(&self, _context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+        fn event(&self, _context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             Err(ErrorCode::UndefinedHeader.into())
         }
     };
@@ -98,7 +99,7 @@ macro_rules! nquery {
 
         fn query(
             &self,
-            _context: &mut Context,
+            _context: &mut Context<T>,
             _args: &mut Tokenizer,
             _response: &mut ResponseUnit,
         ) -> Result<()> {

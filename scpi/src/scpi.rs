@@ -193,12 +193,12 @@ pub mod commands {
     ///> as described in the introduction to the SYSTem:ERRor subsystem.
     pub struct SystErrNextCommand;
 
-    impl Command for SystErrNextCommand {
+    impl<T: Device> Command<T> for SystErrNextCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -215,12 +215,12 @@ pub mod commands {
     ///> Note: If the queue is empty, the response is 0.
     pub struct SystErrCounCommand;
 
-    impl Command for SystErrCounCommand {
+    impl<T: Device> Command<T> for SystErrCounCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -235,12 +235,12 @@ pub mod commands {
     ///> error/event code numbers in FIFO order. If the queue is empty, the response is 0.
     pub struct SystErrAllCommand;
 
-    impl Command for SystErrAllCommand {
+    impl<T: Device> Command<T> for SystErrAllCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -278,12 +278,12 @@ pub mod commands {
         }
     }
 
-    impl Command for SystVersCommand {
+    impl<T: Device> Command<T> for SystVersCommand {
         qonly!();
 
         fn query(
             &self,
-            _context: &mut Context,
+            _context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -301,12 +301,12 @@ pub mod commands {
     ///> Note that reading the event register clears it.
     pub struct StatOperEvenCommand;
 
-    impl Command for StatOperEvenCommand {
+    impl<T: Device> Command<T> for StatOperEvenCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -322,12 +322,12 @@ pub mod commands {
     ///> the command. Reading the condition register is nondestructive.
     pub struct StatOperCondCommand;
 
-    impl Command for StatOperCondCommand {
+    impl<T: Device> Command<T> for StatOperCondCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -350,15 +350,15 @@ pub mod commands {
     ///> cannot be set true.
     pub struct StatOperEnabCommand;
 
-    impl Command for StatOperEnabCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatOperEnabCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.operation.enable = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -379,15 +379,15 @@ pub mod commands {
     ///> cannot be set true.
     pub struct StatOperNtrCommand;
 
-    impl Command for StatOperNtrCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatOperNtrCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.operation.ntr_filter = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -410,15 +410,15 @@ pub mod commands {
     ///> cannot be set true.
     pub struct StatOperPtrCommand;
 
-    impl Command for StatOperPtrCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatOperPtrCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.operation.ptr_filter = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -433,12 +433,12 @@ pub mod commands {
     ///> Defined the same as STATus:OPERation:EVENt. See Section 20.1.4 for details.
     pub struct StatQuesEvenCommand;
 
-    impl Command for StatQuesEvenCommand {
+    impl<T: Device> Command<T> for StatQuesEvenCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -453,12 +453,12 @@ pub mod commands {
     ///> Defined the same as STATus:OPERation:CONDition. See Section 20.1.2 for details.
     pub struct StatQuesCondCommand;
 
-    impl Command for StatQuesCondCommand {
+    impl<T: Device> Command<T> for StatQuesCondCommand {
         qonly!();
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -474,15 +474,15 @@ pub mod commands {
     ///Defined the same as STATus:OPERation:ENABle. See Section 20.1.3 for details.
     pub struct StatQuesEnabCommand;
 
-    impl Command for StatQuesEnabCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatQuesEnabCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.questionable.enable = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -497,15 +497,15 @@ pub mod commands {
     ///> Defined the same as STATus:OPERation:NTRansition. See Section 20.1.6 for details.
     pub struct StatQuesNtrCommand;
 
-    impl Command for StatQuesNtrCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatQuesNtrCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.questionable.ntr_filter = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -520,15 +520,15 @@ pub mod commands {
     ///> Defined the same as STATus:OPERation:PTRansition. See Section 20.1.7 for details.
     pub struct StatQuesPtrCommand;
 
-    impl Command for StatQuesPtrCommand {
-        fn event(&self, context: &mut Context, args: &mut Tokenizer) -> Result<()> {
+    impl<T: Device> Command<T> for StatQuesPtrCommand {
+        fn event(&self, context: &mut Context<T>, args: &mut Tokenizer) -> Result<()> {
             context.questionable.ptr_filter = args.next_data(false)?.unwrap().try_into()?;
             Ok(())
         }
 
         fn query(
             &self,
-            context: &mut Context,
+            context: &mut Context<T>,
             _args: &mut Tokenizer,
             response: &mut ResponseUnit,
         ) -> Result<()> {
@@ -549,9 +549,9 @@ pub mod commands {
     ///> device.
     pub struct StatPresCommand;
 
-    impl Command for StatPresCommand {
+    impl<T: Device> Command<T> for StatPresCommand {
         nquery!();
-        fn event(&self, context: &mut Context, _args: &mut Tokenizer) -> Result<()> {
+        fn event(&self, context: &mut Context<T>, _args: &mut Tokenizer) -> Result<()> {
             context.questionable.preset();
             context.operation.preset();
             context.device.preset()
